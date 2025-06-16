@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown 和流式输出测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>🧪 Markdown 和流式输出测试</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>测试输入</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label>测试问题:</label>
+                            <select id="testQuestion" class="form-select">
+                                <option value="系统有哪些功能？">系统功能介绍</option>
+                                <option value="如何管理文档？">文档管理操作</option>
+                                <option value="系统的安全特性">安全功能说明</option>
+                                <option value="用户角色和权限">用户管理</option>
+                                <option value="自定义问题">自定义问题</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="customQuestion" class="form-control" placeholder="输入自定义问题..." style="display:none;">
+                        </div>
+                        <button id="testBtn" class="btn btn-primary">🧪 开始测试</button>
+                        <button id="clearBtn" class="btn btn-outline-secondary ms-2">🗑️ 清空</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>流式输出效果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="streamOutput" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem; background-color: #f8f9fa;">
+                            <p class="text-muted">点击"开始测试"查看流式输出效果...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Markdown 渲染测试</h5>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="markdownInput" class="form-control mb-3" rows="6" placeholder="输入Markdown内容进行测试...">## 🎯 Markdown 测试
+
+### 功能特性
+- **粗体文字**
+- *斜体文字*
+- `行内代码`
+
+### 代码块
+```javascript
+console.log("Hello, Markdown!");
+```
+
+### 引用
+> 这是一个引用示例
+
+### 表格
+| 功能 | 状态 |
+|------|------|
+| Markdown | ✅ |
+| 流式输出 | ✅ |</textarea>
+                        <button id="renderBtn" class="btn btn-success">🎨 渲染预览</button>
+                        <div id="markdownOutput" class="mt-3 p-3 border rounded bg-white"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 测试问题选择
+        document.getElementById('testQuestion').addEventListener('change', function() {
+            const customInput = document.getElementById('customQuestion');
+            if (this.value === '自定义问题') {
+                customInput.style.display = 'block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+        });
+
+        // 测试流式输出
+        document.getElementById('testBtn').addEventListener('click', async function() {
+            const select = document.getElementById('testQuestion');
+            const customInput = document.getElementById('customQuestion');
+            const question = select.value === '自定义问题' ? customInput.value : select.value;
+            
+            if (!question || question === '自定义问题') {
+                alert('请选择或输入一个问题');
+                return;
+            }
+
+            const output = document.getElementById('streamOutput');
+            output.innerHTML = '';
+            
+            try {
+                // 模拟流式输出
+                const messages = [
+                    { type: 'thinking', message: '🔍 正在分析问题...' },
+                    { type: 'thinking', message: '📖 检索相关文档...' },
+                    { type: 'thinking', message: '🤔 生成回答...' },
+                    { type: 'answer_start', message: '' }
+                ];
+
+                // 模拟思考过程
+                for (const msg of messages.slice(0, 3)) {
+                    addThinkingMessage(output, msg.message);
+                    await sleep(800);
+                }
+
+                // 开始答案输出
+                const answerDiv = document.createElement('div');
+                answerDiv.className = 'answer-content mt-3';
+                output.appendChild(answerDiv);
+
+                // 模拟答案 - 使用后端的模拟回答格式
+                let answer = getSimulateAnswer(question);
+                
+                // 逐句输出
+                const sentences = answer.split('\n');
+                for (let i = 0; i < sentences.length; i++) {
+                    const currentContent = sentences.slice(0, i + 1).join('\n');
+                    try {
+                        answerDiv.innerHTML = marked.parse(currentContent);
+                        answerDiv.querySelectorAll('pre code').forEach(block => {
+                            hljs.highlightElement(block);
+                        });
+                    } catch (e) {
+                        answerDiv.innerHTML = currentContent.replace(/\n/g, '<br>');
+                    }
+                    output.scrollTop = output.scrollHeight;
+                    await sleep(200);
+                }
+
+            } catch (error) {
+                output.innerHTML = `<div class="alert alert-danger">测试错误: ${error.message}</div>`;
+            }
+        });
+
+        // 清空输出
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            document.getElementById('streamOutput').innerHTML = '<p class="text-muted">点击"开始测试"查看流式输出效果...</p>';
+        });
+
+        // Markdown 渲染测试
+        document.getElementById('renderBtn').addEventListener('click', function() {
+            const input = document.getElementById('markdownInput').value;
+            const output = document.getElementById('markdownOutput');
+            
+            try {
+                output.innerHTML = marked.parse(input);
+                output.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            } catch (e) {
+                output.innerHTML = `<div class="alert alert-danger">渲染错误: ${e.message}</div>`;
+            }
+        });
+
+        function addThinkingMessage(container, message) {
+            const div = document.createElement('div');
+            div.className = 'thinking-indicator mb-2';
+            div.innerHTML = `
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                <span>${message}</span>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getSimulateAnswer(question) {
+            const q = question.toLowerCase();
+            
+            if (q.includes('功能') || q.includes('系统')) {
+                return `## 🤖 RAG智能文档管理系统
+
+### 系统概述
+本系统是一个基于**检索增强生成(RAG)**技术的智能文档管理平台。
+
+### 核心功能
+
+#### 1. 智能问答 🧠
+- **实时流式输出**：模拟真实AI思考过程
+- **Markdown渲染**：支持富文本格式显示
+- **文档检索**：基于上传文档内容回答问题
+
+#### 2. 文档管理 📚
+- 多格式文档支持
+- 安全分级存储
+- 实时文档列表
+
+### 特色功能
+- ✨ **流式输出**：实时显示AI思考过程
+- 🎨 **Markdown支持**：美观的富文本渲染
+- 🔐 **安全可靠**：企业级安全保障`;
+            } else {
+                return `## 💬 测试回答
+
+感谢您的问题：**${question}**
+
+这是一个 **Markdown 格式** 的测试回答，包含：
+
+### 功能特性
+- 支持 \`代码高亮\`
+- 支持 **粗体** 和 *斜体*
+- 支持列表和表格
+
+### 代码示例
+\`\`\`javascript
+function testMarkdown() {
+    console.log("Markdown渲染测试");
+}
+\`\`\`
+
+> 这是一个引用块示例
+
+---
+*测试完成！*`;
+            }
+        }
+
+        // 页面加载时自动渲染Markdown示例
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('renderBtn').click();
+        });
+    </script>
+</body>
+</html> 
